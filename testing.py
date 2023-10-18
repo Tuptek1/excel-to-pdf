@@ -2,13 +2,13 @@ import smtplib, ssl
 
 port = 465  # For SSL
 smtp_server = "smtp.gmail.com"
-sender_email = "tuptek112@gmail.com"  # Enter your address
-receiver_email = "pythontester47@gmail.com"  # Enter receiver address
+sender_email = "pythontester47@gmail.com"  # Enter your address
+receiver_email = "tuptek112@gmail.com"  # Enter receiver address
 password = input("Type your password and press enter: ")
 message = """\
 Subject: Hi there
 
-215235123561326412"""
+This message is sent from Python."""
 
 context = ssl.create_default_context()
 with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
