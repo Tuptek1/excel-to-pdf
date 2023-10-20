@@ -6,6 +6,7 @@ from fpdf.fonts import FontFace
 from tkinter import ttk
 from dotenv import dotenv_values
 import json
+import smtplib, ssl
 
 config = dotenv_values(".env")
 
@@ -27,18 +28,15 @@ class Window(Frame):
         global entry2
         global route
         global success1
-        global success2
         global success3
         global error_str
         global ProgressBar
 
         error_str = StringVar()
         success1 = StringVar()
-        success2 = StringVar()
         success3 = StringVar()
         route = StringVar()
         success1.set("")
-        success2.set("")
         success3.set("")
         error_str.set("")
 
@@ -49,8 +47,6 @@ class Window(Frame):
 
         Label1 = Label(root, textvariable=success1)
         Label1.grid(row=0, column=1)
-        Label2 = Label(root, textvariable=success2)
-        Label2.grid(row=0, column=1)
         Label3 = Label(root, textvariable=route)
         Label3.grid(row=4, column=0)
         Label4 = Label(root, textvariable=error_str)
@@ -78,6 +74,9 @@ class Window(Frame):
         button3 = Button(root, text="Ile rzedow do faktury", command=self.get_row_end)
         button3.grid(row=1, column=1, padx=10)
 
+        button4 = Button(root, text="Wyslij email", command=self.show_email_window)
+        button4.grid(row=5, column=0)
+
         ProgressBar = ttk.Progressbar(
             root, orient=HORIZONTAL, length=100, mode="determinate"
         )
@@ -89,7 +88,6 @@ class Window(Frame):
 
     def find_cell_data(self):
         try:
-            success2.set("")
             success1.set("Szukanie Danych")
             cell1 = sh.find(str(entry1.get()))
             row1 = cell1.row
@@ -101,7 +99,6 @@ class Window(Frame):
                 root.update_idletasks()
 
             error_str.set("")
-            success2.set("")
             success1.set("Znaleziono dane!")
 
             self.TABLE_DATA = TABLE_DATA
@@ -149,7 +146,6 @@ class Window(Frame):
         return num_lines_max
 
     def create_pdf(self, spacing=2):
-        global row_values_list
         try:
             pdf = FPDF(orientation="L")
 
@@ -274,10 +270,55 @@ class Window(Frame):
             pdf.output(f"{route.get()}")
             ProgressBar["value"] = 0
             error_str.set("")
-            success1.set("")
-            success2.set("Wygenerowano Fakture!")
+            success1.set("Wygenerowano Fakture!")
         except NameError:
             error_str.set("Nie wybrano ściezki")
+
+    def show_email_window(self):
+        global top
+        global email_entry1
+        global email_entry2
+        global password_entry
+
+        top = Toplevel(root)
+        top.geometry("200x200")
+
+        label1 = Label(top, text="Nadawca")
+        label1.grid(row=0, column=0)
+        label2 = Label(top, text="Odbiorca")
+        label2.grid(row=1, column=0)
+        label3 = Label(top, text="Hasło")
+        label3.grid(row=2, column=0)
+
+        button1 = Button(top, text="Wyslij Email", command=self.hide_email_window)
+        button1.grid(row=3, column=0)
+
+        email_entry1 = Entry(top)
+        email_entry1.grid(row=0, column=1)
+        email_entry2 = Entry(top)
+        email_entry2.grid(row=1, column=1)
+        password_entry = Entry(top)
+        password_entry.grid(row=2, column=1)
+
+    def hide_email_window(self):
+        port = 465  # For SSL
+        smtp_server = "smtp.gmail.com"
+        sender_email = email_entry1.get()
+        receiver_email = email_entry2.get()
+        password = password_entry.get()
+
+        message = """\
+        Subject: Hi there
+
+        This message is sent from Python."""
+
+        context = ssl.create_default_context()
+
+        with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
+            server.login(sender_email, password)
+            server.sendmail(sender_email, receiver_email, message)
+
+        top.withdraw()
 
 
 root = Tk()
